@@ -1,5 +1,7 @@
 #include "rtweekend.h"
 
+#include "ray.h"
+#include "vec3.h"
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
