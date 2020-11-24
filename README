@@ -1,4 +1,4 @@
-![alt text](https://github.com/Boncom99/raytracer.git/master/boles.png?raw=true)
+![header image](https://github.com/Boncom99/raytracer.git/blob/master/boles.png)
 Run:
 $ g++ -std=c++11 main.cc -o main
 $ ./main >image6.ppm
