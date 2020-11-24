@@ -1,4 +1,3 @@
-https://raytracing.github.io/books/RayTracingInOneWeekend.html
- run: 
- g++ -std=c++11 main.cc -o main
- ./main >image6.ppm
+ Run:
+$ g++ -std=c++11 main.cc -o main
+$ ./main >image6.ppm
