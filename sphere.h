@@ -3,6 +3,7 @@
 
 #include"hittable.h"
 #include"vec3.h"
+#include"aabb.h"
 
 class sphere : public hittable {
 	public:
@@ -12,6 +13,7 @@ class sphere : public hittable {
 
 		virtual bool hit(
 			const ray& r, double tmin, double tmax, hit_record& rec) const override;
+      virtual bool bounding_box( double time0, double time1, aabb& output_box ) const override;
 	public:
 		point3 center; 
 		double radius;
@@ -45,28 +47,11 @@ bool sphere::hit(const ray& r, double t_min, double t_max , hit_record& rec) con
     rec.mat_ptr=mat_ptr;
 
     return true;
-    //
-//	if ( discriminant >0) {
-//		auto root= sqrt(discriminant);
-//		auto temp = (-half_b-root) /a;
-//		if (temp<t_max && temp>t_min) {
-//			rec.t =temp;
-//			rec.p = r.at(rec.t);
-//			rec.normal = (rec.p - center) / radius; 
-//			vec3 outward_normal = (rec.p - center)/radius;
-//			rec.set_face_normal(r,outward_normal);
-//			return true;
-//
-//		}
-//		temp = (-half_b+root) /a;
-//		if (temp<t_max && temp>t_min) {
-//			rec.t =temp;
-//			rec.p = r.at(rec.t);
-//			rec.normal = (rec.p - cener) / radius; 
-//			return true;
-//		}
-//		
-//	}
-//	return false;
 }  
+bool sphere::bounding_box(double time0, double time1, aabb& output_box) const {
+    output_box = aabb(
+        center - vec3(radius, radius, radius),
+        center + vec3(radius, radius, radius));
+    return true;
+}
 #endif
