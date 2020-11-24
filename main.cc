@@ -29,25 +29,23 @@ color ray_color(const ray& r, const hittable& world, int depth) {
 hittable_list random_scene() {
     hittable_list world;
 
-    auto ground_material = make_shared<lambertian>(color(1, 0.2, 0.2));
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+    auto checker = make_shared<checker_texture>(color(0.1, 0.1, 0.1), color(1,0.2,0.2));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
 
-    for (int a = -5; a < 5; a++) {
-        for (int b = -5; b < 5; b++) {
+    for (int a = -9; a < 9; a++) {
+        for (int b = -9; b < 9; b++) {
             auto choose_mat = random_double();
             point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
 
-                if (choose_mat < 0.8) {
+                if (choose_mat < 0.2) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                     auto center2 = center + vec3(0, random_double(0,.5), 0);
-                    world.add(make_shared<moving_sphere>(
-                        center, center2, 0.0, 1.0, 0.2, sphere_material));
-                } else if (choose_mat < 0.95) {
+                    world.add(make_shared<sphere>(center, 0.2, sphere_material));}
+                else if (choose_mat < 0.6) {
                     // metal
                     auto albedo = color::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
@@ -64,7 +62,6 @@ hittable_list random_scene() {
 
     auto material1 = make_shared<dielectric>(1.5);
     world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
-    world.add(make_shared<sphere>(point3(0, 1, 0), -0.8, material1));
 
 
     auto material2 = make_shared<lambertian>(color(1,0.6,0.2));
@@ -81,8 +78,8 @@ int main() {
     // Image
 
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 300;
-    const int samples_per_pixel=30; //100
+    const int image_width = 1600;
+    const int samples_per_pixel=500; //100
     const int max_depth=50; //max number of bounces of a ray
 
     // World
