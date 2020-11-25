@@ -1,5 +1,8 @@
 ![](images/piramides.png)
-![](images/square.png)
+![](images/PROVA.png)
+<p align="center">
+<img src="images/square.png" width=50%>
+</p>
 ![](images/boles.png)
 Run:
 
