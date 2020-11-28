@@ -27,8 +27,6 @@ void newpoint(double a, double R, int i, double &p0, double &p1, vec3 u, int ide
     triangle(a, R, x, y, i);
     vec3 v = perpen(u);
 
-    //std::cerr << " febore p[1]=" << p1 << std::endl;
-
     if (ident == 1)
     {
         p0 = p0 - x * u[0] + y * v[0];
@@ -44,8 +42,6 @@ void newpoint(double a, double R, int i, double &p0, double &p1, vec3 u, int ide
         p0 = p0 + (R + R * a) * u[0];
         p1 = p1 + (R + R * a) * u[1];
     }
-
-    // std::cerr << "  p[1]=" << p1 << std::endl;
 }
 
 color ray_color(const ray &r, const color &background, const hittable &world, int depth)
@@ -71,19 +67,19 @@ hittable_list fractal()
 {
     hittable_list world;
 
-    double r = 2.0;
-    double a = 1.0 / 2.0;
+    double r = 3.0;
+    double a = 1.0 / 3.0;
 
-    auto material1 = make_shared<lambertian>(color(1, 0.2, 0.2));
+    auto material1 = make_shared<lambertian>(color(1, 0.2, 0.6));
     auto metall = make_shared<metal>(color(0.7, 0.7, 0.5), 0.0);
-    world.add(make_shared<sphere>(point3(0, 0, 0), r, metall));
-    world.add(make_shared<sphere>(point3(r * (1 + a), 0, 0), r * a, metall));
-    auto difflight = make_shared<diffuse_light>(color(10, 10, 3));
-    world.add(make_shared<sphere>(point3(10, 2, -2), 3, difflight));
+    world.add(make_shared<sphere>(point3(0, 0, 0), r, material1));
+    world.add(make_shared<sphere>(point3(r * (1 + a), 0, 0), r * a, material1));
+    auto difflight = make_shared<diffuse_light>(color(10, 10, 10));
+    // world.add(make_shared<sphere>(point3(17, 3, -2.5), 2.5, difflight));
+    world.add(make_shared<sphere>(point3(13, 0, 1), 2, difflight));
 
-    static int n = 6;
-    static int L = 20000;
-    // static int L = 1 / 2 * pow(3, n + 1) - 1;
+    static int n = 4;
+    static int L = 2000;
     double R = r * a;
 
     int j1 = 1;
@@ -158,9 +154,9 @@ hittable_list fractal()
             p[q3][2] = w1;
             p[q3][3] = w2;
 
-            world.add(make_shared<sphere>(point3(p[j1][0], p[j1][1], 0), R * a, metall));
-            world.add(make_shared<sphere>(point3(p[j2][0], p[j2][1], 0), R * a, metall));
-            world.add(make_shared<sphere>(point3(p[j3][0], p[j3][1], 0), R * a, metall));
+            world.add(make_shared<sphere>(point3(p[j1][0], p[j1][1], 0), R * a, material1));
+            world.add(make_shared<sphere>(point3(p[j2][0], p[j2][1], 0), R * a, material1));
+            world.add(make_shared<sphere>(point3(p[j3][0], p[j3][1], 0), R * a, material1));
             j1 += 3; //numero de cada punt
             j2 += 3;
             j3 += 3;
@@ -505,13 +501,13 @@ int main()
     case 7:
 
         world = fractal();
-        samples_per_pixel = 400;
+        samples_per_pixel = 50;
         //background = color(0, 0, 0);
-        background = color(0.7, 0.8, 1.00);
+        background = color(0, 0, 0);
         aspect_ratio = 16.0 / 9.0;
         lookfrom = point3(4, 0, 10);
-        lookat = point3(3, 0, 0);
-        vfov = 25.0;
+        lookat = point3(4, 0, 0);
+        vfov = 20.0;
         break;
     }
 
@@ -526,6 +522,7 @@ int main()
 
     std::cout << "P3\n"
               << image_width << ' ' << image_height << "\n255\n";
+    //#pragma omp parallel for ordered schedule(dynamic)
 
     for (int j = image_height - 1; j >= 0; --j)
     {
@@ -545,5 +542,5 @@ int main()
         }
     }
 
-    std::cerr << "\nDone.\n";
+    //std::cerr << "\nDone.\n";
 }
