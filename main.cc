@@ -11,6 +11,8 @@
 #include <iostream>
 #include <thread>
 #include <fstream>
+//#include <stdio.h>
+#include <string.h>
 void triangle(double a, double R, double &x, double &y, int i)
 {
     double A = 0, b = 0, c = 0;
@@ -77,7 +79,7 @@ hittable_list fractal()
     world.add(make_shared<sphere>(point3(r * (1 + a), 0, 0), r * a, material1));
     auto difflight = make_shared<diffuse_light>(color(10, 10, 10));
     // world.add(make_shared<sphere>(point3(17, 3, -2.5), 2.5, difflight));
-    world.add(make_shared<sphere>(point3(13, 0, 1), 2, difflight));
+    world.add(make_shared<sphere>(point3(13, 0, 0), 2, difflight));
 
     static int n = 4;
     static int L = 2000;
@@ -421,7 +423,7 @@ int main()
 
     // Image
 
-    const int image_width = 500;
+    const int image_width = 200;
     double aspect_ratio;
     int samples_per_pixel;    //100
     const int max_depth = 50; //max number of bounces of a ray
@@ -505,7 +507,7 @@ int main()
         world = fractal();
         samples_per_pixel = 500;
         //background = color(0, 0, 0);
-        background = color(0.3, 0.7, 0.8);
+        background = color(0, 0, 0);
         aspect_ratio = 16.0 / 9.0;
         lookfrom = point3(4, 0, 10);
         lookat = point3(4, 0, 0);
@@ -523,36 +525,18 @@ int main()
     // Render
 
     //multithreading
-    int core = 8;
-    int m = image_height / core;
-    std::cerr << "image_height = " << image_height << std::endl;
-    std::cerr << "m =  " << m << std::endl;
-    std::cerr << "m*8=" << m * 8 << std::endl;
-    int mm[core + 1];
-    for (int i = 0; i < core; i++)
-    {
-        mm[i] = image_height - m * (i)-1;
-        std::cerr << "mm[" << i << "]=" << mm[i] << std::endl;
-    }
-    mm[core] = -1;
-    for (int i = 0; i < core; i++)
-    {
-        std::cerr << "mm[" << i << "]-m[" << i + 1 << "]=" << mm[i] - mm[i + 1] << std::endl;
-    }
 
-    auto f = [](camera &cam, int image_height, int longitud, int finish, int image_width, const hittable &world, const color &background, int samples_per_pixel, const std::string A, bool l) {
+    auto f = [](camera &cam, int image_height, int longitud, int finish, int image_width, const hittable &world, const color &background, int samples_per_pixel, int l) {
         std::ofstream myfile;
-        myfile.open("../" + A + ".ppm");
-        if (l)
+        myfile.open("../" + to_string(l) + ".ppm");
+        if (l == 0)
         {
             myfile << "P3\n"
                    << image_width << ' ' << image_height << "\n255\n";
         }
-        // myfile << "document " << A;
         for (int j = longitud; j > finish; j--)
 
         {
-            // std::cerr << "j=" << j << std::endl;
             for (int i = 0; i < image_width; ++i)
             {
                 color pixel_color(0, 0, 0);
@@ -563,37 +547,52 @@ int main()
                     ray r = cam.get_ray(u, v);
                     pixel_color += ray_color(r, background, world, max_depth);
                 }
-                //std::cerr << pixel_color << std::endl;
                 myfile << write_color(pixel_color, samples_per_pixel);
             }
         }
-        //myfile.close();
+        myfile.close();
     };
+    int core = 8;
 
-    std::thread A(f, std::ref(cam), image_height, mm[0], mm[1], image_width, std::ref(world), std::ref(background), samples_per_pixel, "A", 1);
-    std::thread B(f, std::ref(cam), image_height, mm[1], mm[2], image_width, std::ref(world), std::ref(background), samples_per_pixel, "B", 0);
-    std::thread C(f, std::ref(cam), image_height, mm[2], mm[3], image_width, std::ref(world), std::ref(background), samples_per_pixel, "C", 0);
-    std::thread D(f, std::ref(cam), image_height, mm[3], mm[4], image_width, std::ref(world), std::ref(background), samples_per_pixel, "D", 0);
-    std::thread E(f, std::ref(cam), image_height, mm[4], mm[5], image_width, std::ref(world), std::ref(background), samples_per_pixel, "E", 0);
-    std::thread F(f, std::ref(cam), image_height, mm[5], mm[6], image_width, std::ref(world), std::ref(background), samples_per_pixel, "F", 0);
-    std::thread G(f, std::ref(cam), image_height, mm[6], mm[7], image_width, std::ref(world), std::ref(background), samples_per_pixel, "G", 0);
-    std::thread H(f, std::ref(cam), image_height, mm[7], mm[8], image_width, std::ref(world), std::ref(background), samples_per_pixel, "H", 0);
-    A.join();
-    B.join();
-    C.join();
-    D.join();
-    E.join();
-    F.join();
-    G.join();
-    H.join();
-    std::ifstream file1("../A.ppm");
-    std::ifstream file2("../B.ppm");
-    std::ifstream file3("../C.ppm");
-    std::ifstream file4("../D.ppm");
-    std::ifstream file5("../E.ppm");
-    std::ifstream file6("../F.ppm");
-    std::ifstream file7("../G.ppm");
-    std::ifstream file8("../H.ppm");
-    std::ofstream FINAL("../fractalFINAL.ppm");
-    FINAL << file1.rdbuf() << file2.rdbuf() << file3.rdbuf() << file4.rdbuf() << file5.rdbuf() << file6.rdbuf() << file7.rdbuf() << file8.rdbuf();
+    if (core == 1)
+    {
+        f(std::ref(cam), image_height, image_height - 1, -1, image_width, std::ref(world), std::ref(background), samples_per_pixel, 0);
+    }
+    else
+    {
+        int m = image_height / core;
+        int mm[core + 1];
+        for (int i = 0; i < core; i++)
+        {
+            mm[i] = image_height - m * (i)-1;
+        }
+        mm[core] = -1;
+        std::vector<std::thread> threads;
+
+        for (int t = 0; t < core; t++)
+            threads.emplace_back(f, std::ref(cam), image_height, mm[t], mm[t + 1], image_width, std::ref(world), std::ref(background), samples_per_pixel, t);
+
+        for (auto &th : threads)
+            th.join();
+
+        std::ifstream file1("../0.ppm");
+        std::ifstream file2("../1.ppm");
+        std::ifstream file3("../2.ppm");
+        std::ifstream file4("../3.ppm");
+        std::ifstream file5("../4.ppm");
+        std::ifstream file6("../5.ppm");
+        std::ifstream file7("../6.ppm");
+        std::ifstream file8("../7.ppm");
+        std::ofstream FINAL("../fractalFINAL2.ppm");
+        FINAL << file1.rdbuf() << file2.rdbuf() << file3.rdbuf() << file4.rdbuf() << file5.rdbuf() << file6.rdbuf() << file7.rdbuf() << file8.rdbuf();
+
+        remove("../0.ppm");
+        remove("../1.ppm");
+        remove("../2.ppm");
+        remove("../3.ppm");
+        remove("../4.ppm");
+        remove("../5.ppm");
+        remove("../6.ppm");
+        remove("../7.ppm");
+    }
 }
