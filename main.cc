@@ -9,7 +9,8 @@
 #include "aarect.h"
 
 #include <iostream>
-
+#include <thread>
+#include <fstream>
 void triangle(double a, double R, double &x, double &y, int i)
 {
     double A = 0, b = 0, c = 0;
@@ -420,7 +421,7 @@ int main()
 
     // Image
 
-    const int image_width = 400;
+    const int image_width = 500;
     double aspect_ratio;
     int samples_per_pixel;    //100
     const int max_depth = 50; //max number of bounces of a ray
@@ -456,6 +457,7 @@ int main()
         lookat = point3(0, 0, 0);
         vfov = 20.0;
         break;
+    //default:
     case 3:
         world = simple_light();
         samples_per_pixel = 200;
@@ -501,9 +503,9 @@ int main()
     case 7:
 
         world = fractal();
-        samples_per_pixel = 50;
+        samples_per_pixel = 500;
         //background = color(0, 0, 0);
-        background = color(0, 0, 0);
+        background = color(0.3, 0.7, 0.8);
         aspect_ratio = 16.0 / 9.0;
         lookfrom = point3(4, 0, 10);
         lookat = point3(4, 0, 0);
@@ -520,27 +522,78 @@ int main()
     camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
     // Render
 
-    std::cout << "P3\n"
-              << image_width << ' ' << image_height << "\n255\n";
-    //#pragma omp parallel for ordered schedule(dynamic)
-
-    for (int j = image_height - 1; j >= 0; --j)
+    //multithreading
+    int core = 8;
+    int m = image_height / core;
+    std::cerr << "image_height = " << image_height << std::endl;
+    std::cerr << "m =  " << m << std::endl;
+    std::cerr << "m*8=" << m * 8 << std::endl;
+    int mm[core + 1];
+    for (int i = 0; i < core; i++)
     {
-        std::cerr << "\r(" << (1.0 - j / image_height) * 100 << "%)" << std::flush;
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-        for (int i = 0; i < image_width; ++i)
-        {
-            color pixel_color(0, 0, 0);
-            for (int s = 0; s < samples_per_pixel; ++s)
-            {
-                auto u = (i + random_double()) / (image_width - 1);
-                auto v = (j + random_double()) / (image_height - 1);
-                ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, background, world, max_depth);
-            }
-            write_color(std::cout, pixel_color, samples_per_pixel);
-        }
+        mm[i] = image_height - m * (i)-1;
+        std::cerr << "mm[" << i << "]=" << mm[i] << std::endl;
+    }
+    mm[core] = -1;
+    for (int i = 0; i < core; i++)
+    {
+        std::cerr << "mm[" << i << "]-m[" << i + 1 << "]=" << mm[i] - mm[i + 1] << std::endl;
     }
 
-    //std::cerr << "\nDone.\n";
+    auto f = [](camera &cam, int image_height, int longitud, int finish, int image_width, const hittable &world, const color &background, int samples_per_pixel, const std::string A, bool l) {
+        std::ofstream myfile;
+        myfile.open("../" + A + ".ppm");
+        if (l)
+        {
+            myfile << "P3\n"
+                   << image_width << ' ' << image_height << "\n255\n";
+        }
+        // myfile << "document " << A;
+        for (int j = longitud; j > finish; j--)
+
+        {
+            // std::cerr << "j=" << j << std::endl;
+            for (int i = 0; i < image_width; ++i)
+            {
+                color pixel_color(0, 0, 0);
+                for (int s = 0; s < samples_per_pixel; ++s)
+                {
+                    auto u = (i + random_double()) / (image_width - 1);
+                    auto v = (j + random_double()) / (image_height - 1);
+                    ray r = cam.get_ray(u, v);
+                    pixel_color += ray_color(r, background, world, max_depth);
+                }
+                //std::cerr << pixel_color << std::endl;
+                myfile << write_color(pixel_color, samples_per_pixel);
+            }
+        }
+        //myfile.close();
+    };
+
+    std::thread A(f, std::ref(cam), image_height, mm[0], mm[1], image_width, std::ref(world), std::ref(background), samples_per_pixel, "A", 1);
+    std::thread B(f, std::ref(cam), image_height, mm[1], mm[2], image_width, std::ref(world), std::ref(background), samples_per_pixel, "B", 0);
+    std::thread C(f, std::ref(cam), image_height, mm[2], mm[3], image_width, std::ref(world), std::ref(background), samples_per_pixel, "C", 0);
+    std::thread D(f, std::ref(cam), image_height, mm[3], mm[4], image_width, std::ref(world), std::ref(background), samples_per_pixel, "D", 0);
+    std::thread E(f, std::ref(cam), image_height, mm[4], mm[5], image_width, std::ref(world), std::ref(background), samples_per_pixel, "E", 0);
+    std::thread F(f, std::ref(cam), image_height, mm[5], mm[6], image_width, std::ref(world), std::ref(background), samples_per_pixel, "F", 0);
+    std::thread G(f, std::ref(cam), image_height, mm[6], mm[7], image_width, std::ref(world), std::ref(background), samples_per_pixel, "G", 0);
+    std::thread H(f, std::ref(cam), image_height, mm[7], mm[8], image_width, std::ref(world), std::ref(background), samples_per_pixel, "H", 0);
+    A.join();
+    B.join();
+    C.join();
+    D.join();
+    E.join();
+    F.join();
+    G.join();
+    H.join();
+    std::ifstream file1("../A.ppm");
+    std::ifstream file2("../B.ppm");
+    std::ifstream file3("../C.ppm");
+    std::ifstream file4("../D.ppm");
+    std::ifstream file5("../E.ppm");
+    std::ifstream file6("../F.ppm");
+    std::ifstream file7("../G.ppm");
+    std::ifstream file8("../H.ppm");
+    std::ofstream FINAL("../fractalFINAL.ppm");
+    FINAL << file1.rdbuf() << file2.rdbuf() << file3.rdbuf() << file4.rdbuf() << file5.rdbuf() << file6.rdbuf() << file7.rdbuf() << file8.rdbuf();
 }
