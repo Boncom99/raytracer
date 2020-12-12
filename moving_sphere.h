@@ -1,4 +1,4 @@
-#ifndef MOVING_SPHERE_H
+/*#ifndef MOVING_SPHERE_H
 #define MOVING_SPHERE_H
 
 #include "rtweekend.h"
@@ -69,4 +69,4 @@ bool moving_sphere::bounding_box(double _time0, double _time1, aabb& output_box)
     return true;
 }
 
-#endif
+#endif*/

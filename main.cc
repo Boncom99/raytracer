@@ -34,11 +34,10 @@ int main()
 
     // Image
 
-    const int image_width = 1200;
     double aspect_ratio;
     int samples_per_pixel;    //100
     const int max_depth = 50; //max number of bounces of a ray
-    //
+
     //World
     hittable_list world;
 
@@ -140,24 +139,32 @@ int main()
     }
 
     // Camera
+    const int image_width = 1200;
+    int image_height = static_cast<int>(image_width / aspect_ratio);
+
+    int pixelCount = image_height * image_width;
 
     vec3 vup(0, 1, 0);
     auto dist_to_focus = 10.0;
-    int image_height = static_cast<int>(image_width / aspect_ratio);
 
-    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+    //
+    vec3 *image = new vec3[pixelCount];
+    memset(&image[0], 0, pixelCount * sizeof(vec3));
+
     // Render
     auto start = std::chrono::high_resolution_clock::now();
-    std::cout << "P3\n"
-              << image_width << ' ' << image_height << "\n255\n";
+    // std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-    for (int j = image_height - 1; j >= 0; j--)
+    //for (int j = image_height - 1; j >= 0; j--)
+    for (int j = 0; j < image_height; j++)
 
     {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
 
         for (int i = 0; i < image_width; ++i)
         {
+
             color pixel_color(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s)
             {
@@ -166,11 +173,45 @@ int main()
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, background, world, max_depth);
             }
-            write_color(std::cout, pixel_color, samples_per_pixel);
+            pixel_color /= float(samples_per_pixel);
+            pixel_color = vec3(sqrt(pixel_color[0]), sqrt(pixel_color[1]), sqrt(pixel_color[2]));
+            const unsigned int index = j * image_width + i;
+            image[index] = pixel_color;
+
+            //write_color(std::cout, pixel_color, samples_per_pixel);
         }
     }
-    std::cerr << "\n DONE!\n " << std::flush;
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
-    std::cerr << "Time to raytrace  a " << image_height * image_width << "pixels  image \n With " << samples_per_pixel << " samples per pixel is : " << diff.count() << " s\n";
+    int frameTimeMs = static_cast<int>(diff.count());
+    std::cout << " - time " << frameTimeMs << " ms \n";
+    //Open file
+
+    std::string filename =
+        "../Desktop/out-x" + std::to_string(image_width) + "-y" + std::to_string(image_height) + "-s" + std::to_string(samples_per_pixel) + "-ms" + std::to_string(frameTimeMs) + ".ppm";
+
+    std::ofstream fileHandler;
+    fileHandler.open(filename, std::ios::out | std::ios::binary);
+    if (!fileHandler.is_open())
+    {
+        std::cout << "error opening file" << std::endl;
+        return -1;
+    }
+
+    fileHandler << "P3\n"
+                << image_width << " " << image_height << "\n255\n";
+
+    //write color
+    for (unsigned int i = 0; i < pixelCount; ++i)
+    {
+        fileHandler
+            << static_cast<int>(255.99f * image[i].e[2]) << " "
+            << static_cast<int>(255.99f * image[i].e[1]) << " "
+            << static_cast<int>(255.99f * image[i].e[0]) << "\n";
+    }
+    std::cout << "File Saved" << std::endl;
+    fileHandler.close();
+    delete[] image;
+    // std::cerr << "\n DONE!\n " << std::flush;
+    //std::cerr << "Time to raytrace  a " << image_height * image_width << "pixels  image \n With " << samples_per_pixel << " samples per pixel is : " << frameTimeMs << " s\n";
 }

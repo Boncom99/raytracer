@@ -8,7 +8,7 @@
 #include "sphere.h"
 #include "tor.h"
 #include "material.h"
-#include "moving_sphere.h"
+//#include "moving_sphere.h"
 #include "aarect.h"
 #include "fractal.h"
 
