@@ -15,6 +15,7 @@ public:
     virtual bool hit(
         const ray &r, double tmin, double tmax, hit_record &rec) const override;
     virtual bool bounding_box(double time0, double time1, aabb &output_box) const override;
+    virtual ~sphere(){};
 
 public:
     point3 center;

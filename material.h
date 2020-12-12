@@ -15,6 +15,7 @@ public:
 
     virtual bool scatter(
         const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const = 0;
+    virtual ~material(){};
 };
 
 class lambertian : public material
@@ -36,6 +37,7 @@ public:
         attenuation = albedo->value(rec.u, rec.v, rec.p);
         return true;
     }
+    virtual ~lambertian(){};
 
 public:
     shared_ptr<texture> albedo;
@@ -53,6 +55,7 @@ public:
         attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0);
     }
+    virtual ~metal(){};
 
 public:
     color albedo;
@@ -87,6 +90,7 @@ public:
         scattered = ray(rec.p, refracted);
         return true;
     }
+    virtual ~dielectric(){};
 
 public:
     double ir; // Index of Refraction
@@ -115,6 +119,7 @@ public:
     {
         return emit->value(u, v, p);
     }
+    virtual ~diffuse_light(){};
 
 public:
     shared_ptr<texture> emit;

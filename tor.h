@@ -15,6 +15,7 @@ public:
     virtual bool hit(
         const ray &r, double tmin, double tmax, hit_record &rec) const override;
     virtual bool bounding_box(double time0, double time1, aabb &output_box) const override;
+    virtual ~tor(){};
 
 public:
     point3 center;
@@ -43,13 +44,13 @@ private:
 bool tor::hit(const ray &r, double t_min, double t_max, hit_record &rec) const
 {
 
-    double t = t_min;
+    double t = 1; //t_min;
     double dist = 0;
     //std::cerr << "t_min= " << t_min << std::endl;
     // std::cerr << "t_max= " << t_max << std::endl;
     // std::cerr << "...............t= " << t << std::endl;
 
-    while (t >= t_min && t < t_max) //TODO
+    while (t >= t_min && t < 2000 /*t_max*/) //TODO
     {
         dist = distance(center, radius, r, t);
 
