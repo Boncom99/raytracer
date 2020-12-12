@@ -24,7 +24,13 @@ struct hit_record
 class hittable
 {
 public:
+	double distance(const point3 &center, double radius, const ray &r, double t) const;
 	virtual bool hit(const ray &r, double t_min, double t_max, hit_record &rec) const = 0;
 	virtual bool bounding_box(double time0, double time1, aabb &output_box) const = 0;
 };
+double hittable::distance(const point3 &center, double radius, const ray &r, double t) const
+{
+
+	return (r.at_unit(t) - center).length() - radius;
+}
 #endif

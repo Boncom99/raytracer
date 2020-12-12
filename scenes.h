@@ -6,14 +6,15 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "tor.h"
 #include "material.h"
 #include "moving_sphere.h"
 #include "aarect.h"
 #include "fractal.h"
 
 #include <iostream>
-#include <thread>
-#include <fstream>
+//#include <thread>
+//#include <fstream>
 #include <string.h>
 hittable_list fractal()
 {
@@ -365,6 +366,62 @@ hittable_list two_perlin_spheres()
     objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
 
     return objects;
+}
+hittable_list torus()
+{
+    {
+        hittable_list world;
+
+        auto checker = make_shared<checker_texture>(color(0.1, 0.1, 0.1), color(1, 0.2, 0.2));
+        world.add(make_shared<tor>(point3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
+
+        for (int a = -9; a < 9; a++)
+        {
+            for (int b = -9; b < 9; b++)
+            {
+                auto choose_mat = random_double();
+                point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
+
+                if ((center - point3(4, 0.2, 0)).length() > 0.9)
+                {
+                    shared_ptr<material> tor_material;
+
+                    if (choose_mat < 0.2)
+                    {
+                        // diffuse
+                        auto albedo = color::random() * color::random();
+                        tor_material = make_shared<lambertian>(albedo);
+                        world.add(make_shared<tor>(center, 0.2, tor_material));
+                    }
+                    else if (choose_mat < 0.6)
+                    {
+                        // metal
+                        auto albedo = color::random(0.5, 1);
+                        auto fuzz = random_double(0, 0.5);
+                        tor_material = make_shared<metal>(albedo, fuzz);
+                        world.add(make_shared<tor>(center, 0.2, tor_material));
+                    }
+                    else
+                    {
+                        // glass
+                        tor_material = make_shared<dielectric>(1.5);
+                        world.add(make_shared<tor>(center, 0.2, tor_material));
+                    }
+                }
+            }
+        }
+
+        auto material1 = make_shared<dielectric>(1.5);
+        world.add(make_shared<tor>(point3(0, 1, 0), 1.0, material1));
+
+        auto material2 = make_shared<lambertian>(color(1, 0.6, 0.2));
+        world.add(make_shared<tor>(point3(-4, 1, 0), 1.0, material2));
+
+        auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+        world.add(make_shared<tor>(point3(4, 1, 0), 1.0, material3));
+
+        return world;
+    }
 }
 
 #endif

@@ -19,6 +19,10 @@ public:
 	{
 		return orig + t * dir;
 	}
+	point3 at_unit(double t) const
+	{
+		return orig + t * unit_vector(dir);
+	}
 
 public:
 	point3 orig;
