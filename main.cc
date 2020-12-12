@@ -1,4 +1,5 @@
 #include <string>
+#include <float.h>
 #include <fstream>
 #include <chrono>
 #include <thread>
@@ -139,7 +140,7 @@ int main()
     }
 
     // Camera
-    const int image_width = 1200;
+    const int image_width = 800;
     int image_height = static_cast<int>(image_width / aspect_ratio);
 
     int pixelCount = image_height * image_width;
@@ -156,8 +157,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     // std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-    //for (int j = image_height - 1; j >= 0; j--)
-    for (int j = 0; j < image_height; j++)
+    for (int j = image_height - 1; j >= 0; j--)
+    //for (int j = 0; j < image_height; j++)
 
     {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
@@ -175,7 +176,7 @@ int main()
             }
             pixel_color /= float(samples_per_pixel);
             pixel_color = vec3(sqrt(pixel_color[0]), sqrt(pixel_color[1]), sqrt(pixel_color[2]));
-            const unsigned int index = j * image_width + i;
+            const unsigned int index = (image_height - j - 1) * image_width + i;
             image[index] = pixel_color;
 
             //write_color(std::cout, pixel_color, samples_per_pixel);
@@ -197,6 +198,10 @@ int main()
         std::cout << "error opening file" << std::endl;
         return -1;
     }
+    else
+    {
+        std::cout << "files opened" << std::endl;
+    }
 
     fileHandler << "P3\n"
                 << image_width << " " << image_height << "\n255\n";
@@ -212,6 +217,4 @@ int main()
     std::cout << "File Saved" << std::endl;
     fileHandler.close();
     delete[] image;
-    // std::cerr << "\n DONE!\n " << std::flush;
-    //std::cerr << "Time to raytrace  a " << image_height * image_width << "pixels  image \n With " << samples_per_pixel << " samples per pixel is : " << frameTimeMs << " s\n";
 }
